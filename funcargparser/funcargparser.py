@@ -33,56 +33,53 @@ class FunctionArgParser:
     def parser(self, params, definition, parent=None):
         if self.is_non_empty_value(params) is False:
             params = {}
-        validated_params = {}
+        parsed_args = {}
         for key, type_def in definition.items():
             value = params.pop(key, None)
-            required = type_def.pop("required", False)
-            alias_key = type_def.pop('alias', key)
-            data_type = type_def.pop('data_type')
-            validator = type_def.pop('validator', None)
-            child = type_def.pop('child', None)
-            try:
-                print_key = f"{parent}.{key}" if parent else key
-                if self.is_non_empty_value(value):
-                    validated_params[alias_key] = self.parse_value(print_key, value, data_type, validator, child,
-                                                                   **type_def)
-                elif required:
-                    raise BadArgError(f"{print_key} should not be empty")
-            finally:
-                type_def["required"] = required
+            required = type_def.get("required", False)
+            alias_key = type_def.get('alias', key)
+            data_type = type_def.get('data_type')
+            validator = type_def.get('validator', None)
+            nested_def = type_def.get('nested_def', None)
+            constraints = type_def.get('constraint', {})
+            print_key = f"{parent}.{key}" if parent else key
+            if self.is_non_empty_value(value):
+                if validator:
+                    parsed_args[alias_key] = validator(value)
+                else:
+                    parsed_args[alias_key] = self.parse_value(print_key, value, data_type, nested_def, **constraints)
+            elif required:
+                raise BadArgError(f"{print_key} is a mandatory parameter")
         if self.is_strict and self.is_non_empty_value(params):
             raise BadArgError(f'Unexpected params {list(params.keys())}')
-        return validated_params
+        return parsed_args
 
     @classmethod
-    def parse_value(cls, key, value, data_type, validator, child, **value_constraints):
-        if validator:
-            value = validator(value)
-        else:
-            try:
-                value = cls.type_cast(value, data_type)
-            except Exception:
-                raise BadArgError(f"{key} should be of type {data_type}")
-        if child:
-            if isinstance(child, dict):
+    def parse_value(cls, key, value, data_type, nested_def, **value_constraints):
+        try:
+            value = cls.type_cast(value, data_type)
+        except Exception:
+            raise BadArgError(f"{key} should be of type {data_type}")
+        if nested_def:
+            if isinstance(nested_def, dict):
                 if data_type is dict:
-                    value = cls.parser(value, child, key)
+                    value = cls.parser(value, nested_def, key)
                 elif data_type is list:
                     temp_list = []
                     for item in value:
-                        list_item = cls.parser(item, child, key)
+                        list_item = cls.parser(item, nested_def, key)
                         temp_list.append(list_item)
                     value = temp_list
-            else:
-                if data_type is not list:
-                    raise BadArgError(f"{data_type} is not compatible for nested checks")
+            elif data_type is list:
                 for i, item in enumerate(value):
                     try:
-                        list_item = cls.type_cast(item, child)
+                        list_item = cls.type_cast(item, nested_def)
                         value[i] = list_item
                     except Exception:
-                        raise BadArgError(f"{key} should be of {data_type} of {child}")
+                        raise BadArgError(f"{key} should be of {data_type} of {nested_def}")
                     cls.check_constraint(list_item, key, **value_constraints)
+            else:
+                raise BadArgError(f"{data_type} is not compatible for nested definition")
 
         else:
             cls.check_constraint(value, key, **value_constraints)
@@ -118,6 +115,11 @@ class FunctionArgParser:
 
     @staticmethod
     def validate_type_definition(type_definition):
+        """
+        Placeholder for validating the type definition
+        :param type_definition:
+        :return:
+        """
         return type_definition
 
     @staticmethod
@@ -129,8 +131,8 @@ class FunctionArgParser:
         :param data_type: Expected data type of the param
         :return: type casted value
         """
-        if (isinstance(data_type, BaseArg) and isinstance(value, data_type.name) is False) or isinstance(value,
-                                                                                                         data_type) is False:
+        if (isinstance(data_type, BaseArg) and isinstance(value, data_type.data_type) is False) or isinstance(value,
+                                                                                                              data_type) is False:
             value = data_type(value)
         return value
 

@@ -11,13 +11,13 @@ from decimal import Decimal
 
 class BaseArg:
     def __init__(self, data_type):
-        self.name = data_type
+        self.data_type = data_type
 
     def __call__(self, value):
         raise NotImplementedError
 
     def __repr__(self):
-        return str(self.name)
+        return str(self.data_type)
 
 
 class DateTimeArg(BaseArg):
@@ -31,7 +31,7 @@ class DateTimeArg(BaseArg):
         return datetime.strptime(value, self.fmt_string)
 
     def __repr__(self):
-        return f"{self.name} and format {self.fmt_string}"
+        return f"{self.data_type} and format {self.fmt_string}"
 
 
 class DateArg(BaseArg):
@@ -45,7 +45,7 @@ class DateArg(BaseArg):
         return datetime.strptime(value, self.fmt_string).date()
 
     def __repr__(self):
-        return f"{str(self.name)} and format {self.fmt_string}"
+        return f"{str(self.data_type)} and format {self.fmt_string}"
 
 
 class DecimalArg(BaseArg):
@@ -75,5 +75,5 @@ class FileArg(BaseArg):
 
     def __repr__(self):
         if self.mime_type:
-            return f"{str(self.name)} and mime type should be '{self.mime_type}'"
+            return f"{str(self.data_type)} and mime type should be '{self.mime_type}'"
         super(FileArg, self).__repr__()

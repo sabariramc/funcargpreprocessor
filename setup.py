@@ -11,7 +11,7 @@
 __author__ = "sabariram"
 __version__ = "1.0"
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
 setup(name='funcargparser',
       version='1.0.0',
@@ -21,6 +21,11 @@ setup(name='funcargparser',
       author='Sabariram',
       author_email='c.sabariram@gmail.com',
       license='MIT Licence',
-      packages=find_packages(),
+      packages=['funcargparser'],
       install_requires=[],
-      zip_safe=False)
+      classifiers=[
+          'Intended Audience :: Developers',
+          'Operating System :: OS Independent',
+          'Programming Language :: Python',
+          'Topic :: Software Development :: Libraries :: Python Modules'
+      ])
