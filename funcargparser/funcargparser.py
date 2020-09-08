@@ -8,7 +8,7 @@ Date : 08-Jun-2020
 from functools import wraps
 import re
 
-from .exceptions import BadArgError
+from .exceptions import BadArgError, TypeCastError
 from .customdatatypearg import BaseArg
 
 
@@ -34,20 +34,20 @@ class FunctionArgParser:
         if self.is_non_empty_value(params) is False:
             params = {}
         parsed_args = {}
-        for key, type_def in definition.items():
+        for key, type_definition in definition.items():
             value = params.pop(key, None)
-            required = type_def.get("required", False)
-            alias_key = type_def.get('alias', key)
-            data_type = type_def.get('data_type')
-            validator = type_def.get('validator', None)
-            nested_def = type_def.get('nested_def', None)
-            constraints = type_def.get('constraint', {})
+            required = type_definition.get('required', False)
+            alias_key = type_definition.get('alias', key)
+            data_type = type_definition.get('data_type')
+            validator = type_definition.get('validator')
+            nested = type_definition.get('nested')
+            constraints = type_definition.get('constraint', {})
             print_key = f"{parent}.{key}" if parent else key
             if self.is_non_empty_value(value):
                 if validator:
                     parsed_args[alias_key] = validator(value)
                 else:
-                    parsed_args[alias_key] = self.parse_value(print_key, value, data_type, nested_def, **constraints)
+                    parsed_args[alias_key] = self.parse_value(print_key, value, data_type, nested, **constraints)
             elif required:
                 raise BadArgError(f"{print_key} is a mandatory parameter")
         if self.is_strict and self.is_non_empty_value(params):
@@ -55,32 +55,27 @@ class FunctionArgParser:
         return parsed_args
 
     @classmethod
-    def parse_value(cls, key, value, data_type, nested_def, **value_constraints):
+    def parse_value(cls, key, value, data_type, nested, **value_constraints):
         try:
             value = cls.type_cast(value, data_type)
         except Exception:
             raise BadArgError(f"{key} should be of type {data_type}")
-        if nested_def:
-            if isinstance(nested_def, dict):
+        if nested:
+            if isinstance(nested, dict):
                 if data_type is dict:
-                    value = cls.parser(value, nested_def, key)
+                    value = cls.parser(value, nested, key)
                 elif data_type is list:
-                    temp_list = []
-                    for item in value:
-                        list_item = cls.parser(item, nested_def, key)
-                        temp_list.append(list_item)
-                    value = temp_list
-            elif data_type is list:
+                    value = [cls.parser(item, nested, key) for item in value]
+            elif callable(nested):
                 for i, item in enumerate(value):
                     try:
-                        list_item = cls.type_cast(item, nested_def)
-                        value[i] = list_item
+                        item = cls.type_cast(item, nested)
                     except Exception:
-                        raise BadArgError(f"{key} should be of {data_type} of {nested_def}")
-                    cls.check_constraint(list_item, key, **value_constraints)
+                        raise BadArgError(f"{key} should be of {data_type} of {nested}")
+                    cls.check_constraint(item, key, **value_constraints)
+                    value[i] = item
             else:
                 raise BadArgError(f"{data_type} is not compatible for nested definition")
-
         else:
             cls.check_constraint(value, key, **value_constraints)
         return value
@@ -120,6 +115,8 @@ class FunctionArgParser:
         :param type_definition:
         :return:
         """
+        data_type = type_definition.get('data_type')
+        validator = type_definition.get('validator')
         return type_definition
 
     @staticmethod

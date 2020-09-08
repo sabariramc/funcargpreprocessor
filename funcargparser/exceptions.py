@@ -7,7 +7,8 @@ Date : 02-Sep-2020
 
 
 class BadArgError(Exception):
+    pass
 
-    def __init__(self, message, data=None):
-        self.data = data
-        super(BadArgError, self).__init__(message)
+
+class TypeCastError(Exception):
+    pass
