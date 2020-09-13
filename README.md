@@ -19,7 +19,7 @@ or download the code and run
  $ python3 setup.py install
 ```
 
-## Functions
+## What it does?
 
  - Extraction and transformation of function argument and raise appropriate exceptions
 
