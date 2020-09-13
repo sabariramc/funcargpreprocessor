@@ -9,7 +9,13 @@ The primary use case is to extend it as a `Flask Extenstion` but is open to use 
 ## Installation
 
 ```bash
-pip install funcargpreprocessor
+ $ pip install funcargpreprocessor
+```
+
+or download the code and run
+
+```bash
+ $ python3 setup.py install
 ```
 
 ## Functions
