@@ -20,13 +20,13 @@ class FunctionArgPreProcessor:
 
     def __call__(self, func_obj):
         @wraps(func_obj)
-        def role_checker(*args, **kwargs):
+        def inner_function(*args, **kwargs):
             raw_argument = self.extract_request_data(*args, **kwargs)
             parsed_argument = self.parser(raw_argument, deepcopy(self.definition))
             kwargs.update(parsed_argument)
             return func_obj(*args, **kwargs)
 
-        return role_checker
+        return inner_function
 
     def extract_request_data(self, *args, **kwargs):
         return {}
