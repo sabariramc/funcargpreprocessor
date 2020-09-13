@@ -7,12 +7,13 @@ Date : 08-Jun-2020
 
 from functools import wraps
 import re
+from copy import deepcopy
 
 from .exceptions import BadArgError, TypeCastError
-from .customdatatypearg import BaseArg
+from .customtypearg import BaseArg
 
 
-class FunctionArgParser:
+class FunctionArgPreProcessor:
     def __init__(self, definition, is_strict=True):
         self.is_strict = is_strict
         self.definition = self.validate_type_definition(definition)
@@ -21,7 +22,7 @@ class FunctionArgParser:
         @wraps(func_obj)
         def role_checker(*args, **kwargs):
             raw_argument = self.extract_request_data(*args, **kwargs)
-            parsed_argument = self.parser(raw_argument, self.definition)
+            parsed_argument = self.parser(raw_argument, deepcopy(self.definition))
             kwargs.update(parsed_argument)
             return func_obj(*args, **kwargs)
 
@@ -36,48 +37,46 @@ class FunctionArgParser:
         parsed_args = {}
         for key, type_definition in definition.items():
             value = params.pop(key, None)
-            required = type_definition.get('required', False)
-            alias_key = type_definition.get('alias', key)
-            data_type = type_definition.get('data_type')
-            validator = type_definition.get('validator')
-            nested = type_definition.get('nested')
-            constraints = type_definition.get('constraint', {})
+            required = type_definition.pop('required', False)
+            alias_key = type_definition.pop('alias', key)
+            data_type = type_definition.pop('data_type')
+            validator = type_definition.pop('validator', None)
+            nested = type_definition.pop('nested', None)
             print_key = f"{parent}.{key}" if parent else key
             if self.is_non_empty_value(value):
                 if validator:
                     parsed_args[alias_key] = validator(value)
                 else:
-                    parsed_args[alias_key] = self.parse_value(print_key, value, data_type, nested, **constraints)
+                    parsed_args[alias_key] = self.parse_value(print_key, value, data_type, nested, **type_definition)
             elif required:
                 raise BadArgError(f"{print_key} is a mandatory parameter")
         if self.is_strict and self.is_non_empty_value(params):
             raise BadArgError(f'Unexpected params {list(params.keys())}')
         return parsed_args
 
-    @classmethod
-    def parse_value(cls, key, value, data_type, nested, **value_constraints):
+    def parse_value(self, key, value, data_type, nested, **value_constraints):
         try:
-            value = cls.type_cast(value, data_type)
+            value = self.type_cast(value, data_type)
         except Exception:
             raise BadArgError(f"{key} should be of type {data_type}")
         if nested:
             if isinstance(nested, dict):
                 if data_type is dict:
-                    value = cls.parser(value, nested, key)
+                    value = self.parser(value, nested, key)
                 elif data_type is list:
-                    value = [cls.parser(item, nested, key) for item in value]
+                    value = [self.parser(item, deepcopy(nested), key) for item in value]
             elif callable(nested):
                 for i, item in enumerate(value):
                     try:
-                        item = cls.type_cast(item, nested)
+                        item = self.type_cast(item, nested)
                     except Exception:
                         raise BadArgError(f"{key} should be of {data_type} of {nested}")
-                    cls.check_constraint(item, key, **value_constraints)
+                    self.check_constraint(item, key, **value_constraints)
                     value[i] = item
             else:
                 raise BadArgError(f"{data_type} is not compatible for nested definition")
         else:
-            cls.check_constraint(value, key, **value_constraints)
+            self.check_constraint(value, key, **value_constraints)
         return value
 
     @staticmethod
@@ -115,6 +114,7 @@ class FunctionArgParser:
         :param type_definition:
         :return:
         """
+        #TODO:validator
         data_type = type_definition.get('data_type')
         validator = type_definition.get('validator')
         return type_definition

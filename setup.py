@@ -13,19 +13,26 @@ __version__ = "1.0"
 
 from setuptools import setup
 
-setup(name='funcargparser',
-      version='1.0.0',
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
+setup(name='funcargpreprocessor',
+      version='0.1.0',
       python_requires='>=3.6',
       description='Parser for function arguments',
-      url='https://github.com/sabariramc/funcargparser.git',
+      url='https://github.com/sabariramc/funcargpreprocessor',
       author='Sabariram',
       author_email='c.sabariram@gmail.com',
       license='MIT Licence',
-      packages=['funcargparser'],
+      packages=['funcargpreprocessor'],
+      long_description=long_description,
+      long_description_content_type="text/markdown",
       install_requires=[],
       classifiers=[
           'Intended Audience :: Developers',
           'Operating System :: OS Independent',
-          'Programming Language :: Python',
+          'Programming Language :: Python :: 3.6',
+          'Programming Language :: Python :: 3.7',
           'Topic :: Software Development :: Libraries :: Python Modules'
+          , "License :: OSI Approved :: MIT License"
       ])
