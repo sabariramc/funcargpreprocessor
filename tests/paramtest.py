@@ -66,3 +66,52 @@ class_instance.test(
          , "phone_number": "8884233317"
          , "fasdf": ''
      }}]})
+
+try:
+    class_instance.test(
+        {"pageNo": "3", "start_date": "2020-1e-10", "reg_time": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+         "id_list": ["1", 1, 2, "0"],
+         "location": [{"address_line_1": "fad", "pincode": 6544554, "contact_person": {
+             "first_name": "sabari"
+             , "phone_number": "8884233317"
+             , "fasdf": ''
+         }}]})
+except Exception as e:
+    pprint(e)
+
+try:
+    class_instance.test(
+        {"pageNo": "a", "start_date": "2020-1-10", "reg_time": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+         "id_list": ["1", 1, 2, "0"],
+         "location": [{"address_line_1": "fad", "pincode": 6544554, "contact_person": {
+             "first_name": "sabari"
+             , "phone_number": "8884233317"
+             , "fasdf": ''
+         }}]})
+except Exception as e:
+    pprint(e)
+
+try:
+    class_instance.test(
+        {"pageNo": "1", "start_date": "2020-1-10", "reg_time": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+         "id_list": ["1", 1, 2, "0"],
+         "location": [{"address_line_1": "fad", "pincode": "XX", "contact_person": {
+             "first_name": "sabari"
+             , "phone_number": "8884233317"
+             , "fasdf": ''
+         }}]})
+except Exception as e:
+    pprint(e)
+
+try:
+    class_instance.test(
+        {"pageNo": "2", "start_date": "2020-1-10", "reg_time": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+         "id_list": ["1", 1, 2, "0"],
+         "location": [{"address_line_1": "fad", "pincode": "636351", "contact_person": {
+             "first_name": "sabari"
+             , "phone_number": "AB"
+             , "fasdf": ''
+         }}]})
+except Exception as e:
+    print(e)
+    pprint(e)
