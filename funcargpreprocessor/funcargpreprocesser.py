@@ -40,7 +40,7 @@ class FunctionArgPreProcessor:
             value = params.pop(key, None)
             required = type_definition.pop('required', False)
             alias_key = type_definition.pop('alias', key)
-            data_type = type_definition.pop('data_type')
+            data_type = type_definition.pop('data_type', None)
             validator = type_definition.pop('validator', None)
             nested = type_definition.pop('nested', None)
             print_key = f"{parent}.{key}" if parent else key
@@ -59,8 +59,6 @@ class FunctionArgPreProcessor:
     def parse_value(self, key, value, data_type, nested, **value_constraints):
         try:
             value = self.type_cast(value, data_type)
-        except FieldError:
-            raise
         except Exception:
             raise FieldTypeError(key, data_type)
         if nested:
@@ -68,7 +66,18 @@ class FunctionArgPreProcessor:
                 if data_type is dict:
                     value = self.parser(value, nested, key)
                 elif data_type is list:
-                    value = [self.parser(item, deepcopy(nested), key) for item in value]
+                    temp = []
+                    for i, item in enumerate(value):
+                        temp.append(self.parser(item, deepcopy(nested), f'{key}[{i}]'))
+                    value = temp
+            elif data_type == list:
+                temp = []
+                for i, item in enumerate(value):
+                    try:
+                        temp.append(self.type_cast(item, nested))
+                    except Exception:
+                        raise FieldTypeError(f'{key}[{i}]', nested)
+                value = temp
         else:
             self.check_constraint(value, key, **value_constraints)
         return value
