@@ -24,7 +24,7 @@ or download the code and run
  - Extraction and transformation of function argument and raise appropriate exceptions
 
 ## Example
- - Please refer `tests` folder for examples
+ - Please refer [testimplementation.py](https://github.com/sabariramc/funcargpreprocessor/blob/master/testimplementation.py) and [fieldtest.py](https://github.com/sabariramc/funcargpreprocessor/blob/master/fieldtest.py) for examples
  
 ### Explanation
 
