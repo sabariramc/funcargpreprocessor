@@ -8,8 +8,7 @@ Date : 02-Sep-2020
 from datetime import datetime, date
 from decimal import Decimal
 from abc import ABC, abstractmethod
-
-from .exceptions import TypeCastError
+import json
 
 
 class BaseArg(ABC):
@@ -36,7 +35,11 @@ class DateTimeArg(BaseArg):
         return datetime.strptime(value, self.fmt_string)
 
     def __repr__(self):
-        return f"{self.data_type} and format {self.fmt_string}"
+        data = {
+            "type": f'{self.data_type}'
+            , "format": self.fmt_string
+        }
+        return json.dumps(data)
 
     def get_sample(self):
         return datetime.now()
@@ -51,7 +54,11 @@ class DateArg(BaseArg):
         return datetime.strptime(value, self.fmt_string).date()
 
     def __repr__(self):
-        return f"{str(self.data_type)} and format {self.fmt_string}"
+        data = {
+            "type": f'{self.data_type}'
+            , "format": self.fmt_string
+        }
+        return json.dumps(data)
 
     def get_sample(self):
         return datetime.now()
@@ -77,15 +84,17 @@ class FileArg(BaseArg):
     def __call__(self, file_mime_type):
         if self.mime_type:
             if file_mime_type.startswith(self.mime_type) is False:
-                raise TypeCastError()
+                raise Exception()
         else:
             if file_mime_type not in self.mime_list:
-                raise TypeCastError()
+                raise Exception()
         return file_mime_type
 
     def __repr__(self):
         if self.mime_type:
-            return f"{str(self.data_type)} and mime type should be '{self.mime_type}'"
+            return f"{self.mime_type}"
+        elif self.mime_list:
+            return f"{'/'.join(self.mime_list)}"
         return super().__repr__()
 
     def get_sample(self):

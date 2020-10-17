@@ -9,8 +9,9 @@ from functools import wraps
 import re
 from copy import deepcopy
 
-from .exceptions import BadArgError, TypeCastError
+from .exceptions import FieldError, MissingFieldError, FieldTypeError
 from .customtypearg import BaseArg
+from .errorcode import ErrorCode
 
 
 class FunctionArgPreProcessor:
@@ -39,42 +40,47 @@ class FunctionArgPreProcessor:
             value = params.pop(key, None)
             required = type_definition.pop('required', False)
             alias_key = type_definition.pop('alias', key)
-            data_type = type_definition.pop('data_type')
+            data_type = type_definition.pop('data_type', None)
             validator = type_definition.pop('validator', None)
             nested = type_definition.pop('nested', None)
             print_key = f"{parent}.{key}" if parent else key
             if self.is_non_empty_value(value):
                 if validator:
-                    parsed_args[alias_key] = validator(value)
+                    parsed_args[alias_key] = validator(print_key, value)
                 else:
                     parsed_args[alias_key] = self.parse_value(print_key, value, data_type, nested, **type_definition)
             elif required:
-                raise BadArgError(f"{print_key} is a mandatory parameter")
+                raise MissingFieldError(print_key)
         if self.is_strict and self.is_non_empty_value(params):
-            raise BadArgError(f'Unexpected params {list(params.keys())}')
+            param_list = list(params.keys())
+            raise FieldError(ErrorCode.UN_RECOGNIZED_FIELD, param_list, f'Unexpected params {param_list}')
         return parsed_args
 
     def parse_value(self, key, value, data_type, nested, **value_constraints):
         try:
             value = self.type_cast(value, data_type)
         except Exception:
-            raise BadArgError(f"{key} should be of type {data_type}")
+            raise FieldTypeError(key, data_type)
         if nested:
             if isinstance(nested, dict):
                 if data_type is dict:
                     value = self.parser(value, nested, key)
                 elif data_type is list:
-                    value = [self.parser(item, deepcopy(nested), key) for item in value]
-            elif callable(nested):
+                    temp = []
+                    for i, item in enumerate(value):
+                        temp.append(self.parser(item, deepcopy(nested), f'{key}[{i}]'))
+                    value = temp
+            elif data_type == list:
+                temp = []
                 for i, item in enumerate(value):
+                    field_name = f'{key}[{i}]'
                     try:
                         item = self.type_cast(item, nested)
+                        temp.append(item)
                     except Exception:
-                        raise BadArgError(f"{key} should be of {data_type} of {nested}")
-                    self.check_constraint(item, key, **value_constraints)
-                    value[i] = item
-            else:
-                raise BadArgError(f"{data_type} is not compatible for nested definition")
+                        raise FieldTypeError(field_name, nested)
+                    self.check_constraint(item, field_name, **value_constraints)
+                value = temp
         else:
             self.check_constraint(value, key, **value_constraints)
         return value
@@ -96,16 +102,19 @@ class FunctionArgPreProcessor:
         :return:
         """
         if min_val and value < min_val:
-            raise BadArgError(f"{key} should be greater than or equal to {min_val}")
+            raise FieldError(ErrorCode.FIELD_MIN_RANGE_EXCEEDED, key,
+                             f"{key} should be greater than or equal to {min_val}",
+                             {"minValue": min_val})
         if max_val and value > max_val:
-            raise BadArgError(f"{key} should be lesser than or equal to {max_val}")
+            raise FieldError(ErrorCode.FIELD_MAX_RANGE_EXCEEDED, key,
+                             f"{key} should be lesser than or equal to {max_val}",
+                             {"maxValue": max_val})
         if value_list and value not in value_list:
-            raise BadArgError(f"{key} should be one of these - {value_list}")
+            raise FieldError(ErrorCode.FIELD_VALUE_NOT_IN_ALLOWED_LIST, key,
+                             f"{key} should be one of these - {value_list}", {"allowedValue": value_list})
         if regex and re.search(regex, value) is None:
-            if regex_error_message:
-                raise BadArgError(f"{key} {regex_error_message}")
-            else:
-                raise BadArgError(f"{key} should be of format - {regex}")
+            message = regex_error_message if regex_error_message else f"{key} should be of format - {regex}"
+            raise FieldError(ErrorCode.FIELD_REGEX_VALIDATION_FAILED, key, message, {"regex": regex})
 
     @staticmethod
     def validate_type_definition(type_definition):
@@ -114,7 +123,7 @@ class FunctionArgPreProcessor:
         :param type_definition:
         :return:
         """
-        #TODO:validator
+        # TODO:validator
         data_type = type_definition.get('data_type')
         validator = type_definition.get('validator')
         return type_definition
