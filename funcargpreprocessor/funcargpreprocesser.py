@@ -73,10 +73,13 @@ class FunctionArgPreProcessor:
             elif data_type == list:
                 temp = []
                 for i, item in enumerate(value):
+                    field_name = f'{key}[{i}]'
                     try:
-                        temp.append(self.type_cast(item, nested))
+                        item = self.type_cast(item, nested)
+                        temp.append(item)
                     except Exception:
-                        raise FieldTypeError(f'{key}[{i}]', nested)
+                        raise FieldTypeError(field_name, nested)
+                    self.check_constraint(item, field_name, **value_constraints)
                 value = temp
         else:
             self.check_constraint(value, key, **value_constraints)
