@@ -32,3 +32,7 @@ class FieldTypeError(FieldError):
     def __init__(self, field_name, data_type):
         super().__init__(ErrorCode.ERRONEOUS_FIELD_TYPE, field_name, f"{field_name} should be of type {data_type}",
                          {"expectedType": f'{data_type}'})
+
+
+class FieldValueError(FieldError):
+    pass

@@ -11,7 +11,7 @@ from uuid import uuid4, UUID
 
 from testimplementation import parse_function_args
 from funcargpreprocessor import DateArg, DateTimeArg, ErrorCode
-from funcargpreprocessor import FieldTypeError, FieldError, MissingFieldError
+from funcargpreprocessor import FieldTypeError, FieldError, MissingFieldError, FieldValueError
 
 import unittest
 
@@ -143,7 +143,7 @@ class FunctionArgTestCases(unittest.TestCase):
                          e.exception.error_data)
 
     def test_value_error_1(self):
-        with self.assertRaises(FieldError) as e:
+        with self.assertRaises(FieldValueError) as e:
             class_instance.test(
                 {'request_id': str(uuid4()),
                  'pageNo': '1',
@@ -158,7 +158,7 @@ class FunctionArgTestCases(unittest.TestCase):
         self.assertEqual({"allowedValue": [0, 1, 2, 3]}, e.exception.error_data)
 
     def test_value_error_2(self):
-        with self.assertRaises(FieldError) as e:
+        with self.assertRaises(FieldValueError) as e:
             class_instance.test(
                 {'request_id': str(uuid4()),
                  'pageNo': '0',
@@ -172,7 +172,7 @@ class FunctionArgTestCases(unittest.TestCase):
         self.assertEqual({'minValue': 1}, e.exception.error_data)
 
     def test_value_error_3(self):
-        with self.assertRaises(FieldError) as e:
+        with self.assertRaises(FieldValueError) as e:
             class_instance.test(
                 {'request_id': str(uuid4()),
                  'pageNo': '11',
@@ -186,7 +186,7 @@ class FunctionArgTestCases(unittest.TestCase):
         self.assertEqual({'maxValue': 10}, e.exception.error_data)
 
     def test_regex_error(self):
-        with self.assertRaises(FieldError) as e:
+        with self.assertRaises(FieldValueError) as e:
             class_instance.test(
                 {'request_id': str(uuid4()),
                  "location": [{"address_line_1": "fad", "pincode": 6544554, "contact_person": {

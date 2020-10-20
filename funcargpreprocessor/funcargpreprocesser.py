@@ -9,7 +9,7 @@ from functools import wraps
 import re
 from copy import deepcopy
 
-from .exceptions import FieldError, MissingFieldError, FieldTypeError
+from .exceptions import FieldError, MissingFieldError, FieldTypeError, FieldValueError
 from .customtypearg import BaseArg
 from .errorcode import ErrorCode
 
@@ -102,19 +102,19 @@ class FunctionArgPreProcessor:
         :return:
         """
         if min_val and value < min_val:
-            raise FieldError(ErrorCode.FIELD_MIN_RANGE_EXCEEDED, key,
+            raise FieldValueError(ErrorCode.FIELD_MIN_RANGE_EXCEEDED, key,
                              f"{key} should be greater than or equal to {min_val}",
                              {"minValue": min_val})
         if max_val and value > max_val:
-            raise FieldError(ErrorCode.FIELD_MAX_RANGE_EXCEEDED, key,
+            raise FieldValueError(ErrorCode.FIELD_MAX_RANGE_EXCEEDED, key,
                              f"{key} should be lesser than or equal to {max_val}",
                              {"maxValue": max_val})
         if value_list and value not in value_list:
-            raise FieldError(ErrorCode.FIELD_VALUE_NOT_IN_ALLOWED_LIST, key,
+            raise FieldValueError(ErrorCode.FIELD_VALUE_NOT_IN_ALLOWED_LIST, key,
                              f"{key} should be one of these - {value_list}", {"allowedValue": value_list})
         if regex and re.search(regex, value) is None:
             message = regex_error_message if regex_error_message else f"{key} should be of format - {regex}"
-            raise FieldError(ErrorCode.FIELD_REGEX_VALIDATION_FAILED, key, message, {"regex": regex})
+            raise FieldValueError(ErrorCode.FIELD_REGEX_VALIDATION_FAILED, key, message, {"regex": regex})
 
     @staticmethod
     def validate_type_definition(type_definition):
