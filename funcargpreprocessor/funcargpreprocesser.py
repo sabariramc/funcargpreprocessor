@@ -43,6 +43,7 @@ class FunctionArgPreProcessor:
             data_type = type_definition.pop('data_type', None)
             validator = type_definition.pop('validator', None)
             nested = type_definition.pop('nested', None)
+            type_definition.pop('description', None)
             print_key = f"{parent}.{key}" if parent else key
             if self.is_non_empty_value(value):
                 if validator:
@@ -103,15 +104,15 @@ class FunctionArgPreProcessor:
         """
         if min_val and value < min_val:
             raise FieldValueError(ErrorCode.FIELD_MIN_RANGE_EXCEEDED, key,
-                             f"{key} should be greater than or equal to {min_val}",
-                             {"minValue": min_val})
+                                  f"{key} should be greater than or equal to {min_val}",
+                                  {"minValue": min_val})
         if max_val and value > max_val:
             raise FieldValueError(ErrorCode.FIELD_MAX_RANGE_EXCEEDED, key,
-                             f"{key} should be lesser than or equal to {max_val}",
-                             {"maxValue": max_val})
+                                  f"{key} should be lesser than or equal to {max_val}",
+                                  {"maxValue": max_val})
         if value_list and value not in value_list:
             raise FieldValueError(ErrorCode.FIELD_VALUE_NOT_IN_ALLOWED_LIST, key,
-                             f"{key} should be one of these - {value_list}", {"allowedValue": value_list})
+                                  f"{key} should be one of these - {value_list}", {"allowedValue": value_list})
         if regex and re.search(regex, value) is None:
             message = regex_error_message if regex_error_message else f"{key} should be of format - {regex}"
             raise FieldValueError(ErrorCode.FIELD_REGEX_VALIDATION_FAILED, key, message, {"regex": regex})

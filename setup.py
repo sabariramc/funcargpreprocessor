@@ -17,7 +17,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(name='funcargpreprocessor',
-      version='0.6.0',
+      version='0.6.1',
       python_requires='>=3.6',
       description='Parser for function arguments',
       url='https://github.com/sabariramc/funcargpreprocessor',
