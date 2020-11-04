@@ -25,7 +25,7 @@ def validate_uuid4(key, value):
 
 
 function_arg_definition = {
-    "pageNo": {"data_type": int, "min_val": 1, "max_val": 10, 'alias': 'page_no'}
+    "pageNo": {"data_type": int, "min_val": 1, "max_val": 10, 'alias': 'page_no', "description": "Test description"}
     , "start_date": {"data_type": DateArg('%Y-%m-%d'), "min_val": date(2020, 1, 1)}
     , "id_list": {"data_type": list, "nested": int,
                   "value_list": [0, 1, 2, 3]}
