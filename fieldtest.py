@@ -31,6 +31,7 @@ function_arg_definition = {
                   "value_list": [0, 1, 2, 3]}
     , 'reg_time': {"data_type": DateTimeArg('%Y-%m-%d %H:%M:%S')}
     , 'request_id': {'validator': validate_uuid4, 'required': True}
+    , "name": {"data_type": dict}
     , "location": {"data_type": list
         , "nested": {
             "address_line_1": {"data_type": str, "required": True}
@@ -72,12 +73,18 @@ class FunctionArgTestCases(unittest.TestCase):
             "first_name": "sabari"
             , "phone_number": "8884233317"
         }}
+        name = {
+            "first_name": "Sabari"
+        }
         response = class_instance.test(
             {"pageNo": "10", "start_date": start_date.strftime('%Y-%m-%d')
                 , "reg_time": reg_time.strftime('%Y-%m-%d %H:%M:%S'),
              'request_id': request_uuid,
              "id_list": ["1", 1, 2, "0"],
-             "location": [{**deepcopy(location_1), 'fad': 'fad'}, deepcopy(location_2)]}
+             "location": [{**deepcopy(location_1), 'fad': 'fad'}, deepcopy(location_2)]
+                , "name": name
+             }
+
         )
         self.assertEqual(response.get('page_no'), 10)
         self.assertEqual(response.get('start_date'), start_date)
@@ -86,6 +93,8 @@ class FunctionArgTestCases(unittest.TestCase):
         self.assertEqual(response.get('id_list'), [1, 1, 2, 0])
         self.assertEqual(response.get('location')[0], location_1)
         self.assertEqual(response.get('location')[1], location_2)
+        self.assertEqual(response.get('location')[1], location_2)
+        self.assertEqual(response.get('name'), name)
 
     def test_mandatory_error(self):
         with self.assertRaises(MissingFieldError) as e:
@@ -209,6 +218,33 @@ class FunctionArgTestCases(unittest.TestCase):
         self.assertEqual(ErrorCode.ERRONEOUS_FIELD_TYPE, e.exception.error_code)
         self.assertEqual('request_id', e.exception.field_name)
         self.assertEqual('request_id should be UUID4', e.exception.message)
+
+    def test_field_validation_list(self):
+        with self.assertRaises(FieldTypeError) as e:
+            class_instance.test({
+                "request_id": str(uuid4())
+                , "location": {"address_line_1": "fad", "pincode": 6544554, "contact_person": {
+                    "first_name": "sabari"
+                    , "phone_number": "8884233317"
+                }}
+            })
+        self.assertEqual(ErrorCode.ERRONEOUS_FIELD_TYPE, e.exception.error_code)
+        self.assertEqual("location", e.exception.field_name)
+        self.assertEqual(e.exception.message, "location should be of type <class 'list'>")
+
+    def test_field_validation_dict(self):
+        with self.assertRaises(FieldTypeError) as e:
+            class_instance.test({
+                "request_id": str(uuid4())
+                , "location": {"address_line_1": "fad", "pincode": 6544554, "contact_person": {
+                    "first_name": "sabari"
+                    , "phone_number": "8884233317"
+                }}
+                , "name": "fasdf"
+            })
+        self.assertEqual(ErrorCode.ERRONEOUS_FIELD_TYPE, e.exception.error_code)
+        self.assertEqual("name", e.exception.field_name)
+        self.assertEqual("name should be of type <class 'dict'>", e.exception.message)
 
 
 if __name__ == '__main__':
