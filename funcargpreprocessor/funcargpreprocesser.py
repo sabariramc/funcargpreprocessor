@@ -138,14 +138,10 @@ class FunctionArgPreProcessor:
         :param data_type: Expected data type of the param
         :return: type casted value
         """
-        if data_type in [dict, list]:
-            if isinstance(value, data_type):
-                return value
-            else:
-                raise Exception()
-        if (isinstance(data_type, BaseArg) and isinstance(value, data_type.data_type) is False) or isinstance(value,
-                                                                                                              data_type) is False:
+        if isinstance(data_type, BaseArg):
             value = data_type(value)
+        elif isinstance(value, data_type) is False:
+            raise Exception()
         return value
 
     @staticmethod

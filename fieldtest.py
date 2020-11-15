@@ -45,7 +45,9 @@ function_arg_definition = {
                 }
             }
         }
+
                    }
+    , "location_check": {"data_type": bool}
 }
 
 
@@ -77,12 +79,13 @@ class FunctionArgTestCases(unittest.TestCase):
             "first_name": "Sabari"
         }
         response = class_instance.test(
-            {"pageNo": "10", "start_date": start_date.strftime('%Y-%m-%d')
+            {"pageNo": 10, "start_date": start_date.strftime('%Y-%m-%d')
                 , "reg_time": reg_time.strftime('%Y-%m-%d %H:%M:%S'),
              'request_id': request_uuid,
-             "id_list": ["1", 1, 2, "0"],
+             "id_list": [1, 1, 2, 0],
              "location": [{**deepcopy(location_1), 'fad': 'fad'}, deepcopy(location_2)]
                 , "name": name
+                , "location_check": True
              }
 
         )
@@ -95,6 +98,7 @@ class FunctionArgTestCases(unittest.TestCase):
         self.assertEqual(response.get('location')[1], location_2)
         self.assertEqual(response.get('location')[1], location_2)
         self.assertEqual(response.get('name'), name)
+        self.assertEqual(response.get('location_check'), True)
 
     def test_mandatory_error(self):
         with self.assertRaises(MissingFieldError) as e:
@@ -121,7 +125,7 @@ class FunctionArgTestCases(unittest.TestCase):
         with self.assertRaises(FieldTypeError) as e:
             class_instance.test(
                 {'request_id': str(uuid4()),
-                 'pageNo': '1',
+                 'pageNo': 1,
                  'id_list': [1, 'a'],
                  "location": [{"address_line_1": "fad", "pincode": 6544554, "contact_person": {
                      "first_name": "sabari"
@@ -136,27 +140,42 @@ class FunctionArgTestCases(unittest.TestCase):
         with self.assertRaises(FieldTypeError) as e:
             class_instance.test(
                 {'request_id': str(uuid4()),
-                 'pageNo': '1',
+                 'pageNo': 1,
                  "start_date": "afsa",
-                 'id_list': [1, '3'],
+                 'id_list': [1, 3],
                  "location": [{"address_line_1": "fad", "pincode": 6544554, "contact_person": {
                      "first_name": "sabari"
                      , "phone_number": "8884233317"
                  }}]})
         self.assertEqual(ErrorCode.ERRONEOUS_FIELD_TYPE, e.exception.error_code)
         self.assertEqual('start_date', e.exception.field_name)
-        self.assertEqual('start_date', e.exception.field_name)
         self.assertEqual('start_date should be of type {"type": "<class \'datetime.date\'>", "format": "%Y-%m-%d"}',
                          e.exception.message)
         self.assertEqual({'expectedType': '{"type": "<class \'datetime.date\'>", "format": "%Y-%m-%d"}'},
                          e.exception.error_data)
 
+    def test_type_error_4(self):
+        with self.assertRaises(FieldTypeError) as e:
+            class_instance.test(
+                {'request_id': str(uuid4()),
+                 'pageNo': 1,
+                 'id_list': [1, 3],
+                 "location": [{"address_line_1": "fad", "pincode": 6544554, "contact_person": {
+                     "first_name": "sabari"
+                     , "phone_number": "8884233317"
+                 }}]
+                    , "location_check": 1})
+        self.assertEqual(ErrorCode.ERRONEOUS_FIELD_TYPE, e.exception.error_code)
+        self.assertEqual('location_check', e.exception.field_name)
+        self.assertEqual("location_check should be of type <class 'bool'>", e.exception.message)
+        self.assertEqual({'expectedType': "<class 'bool'>"}, e.exception.error_data)
+
     def test_value_error_1(self):
         with self.assertRaises(FieldValueError) as e:
             class_instance.test(
                 {'request_id': str(uuid4()),
-                 'pageNo': '1',
-                 'id_list': [1, '4'],
+                 'pageNo': 1,
+                 'id_list': [1, 4],
                  "location": [{"address_line_1": "fad", "pincode": 6544554, "contact_person": {
                      "first_name": "sabari"
                      , "phone_number": "8884233317"
@@ -170,7 +189,7 @@ class FunctionArgTestCases(unittest.TestCase):
         with self.assertRaises(FieldValueError) as e:
             class_instance.test(
                 {'request_id': str(uuid4()),
-                 'pageNo': '0',
+                 'pageNo': 0,
                  "location": [{"address_line_1": "fad", "pincode": 6544554, "contact_person": {
                      "first_name": "sabari"
                      , "phone_number": "8884233317"
@@ -184,7 +203,7 @@ class FunctionArgTestCases(unittest.TestCase):
         with self.assertRaises(FieldValueError) as e:
             class_instance.test(
                 {'request_id': str(uuid4()),
-                 'pageNo': '11',
+                 'pageNo': 11,
                  "location": [{"address_line_1": "fad", "pincode": 6544554, "contact_person": {
                      "first_name": "sabari"
                      , "phone_number": "8884233317"
