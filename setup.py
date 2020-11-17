@@ -2,10 +2,6 @@
 """
     File            : setup.py
     Package         :
-    Description     :
-    Project Name    : BaseModule
-    Created by Sabariram on 28-Dec-2018
-    Copyright (c) KNAB Finance Advisors Pvt. Ltd. All rights reserved.
 """
 
 __author__ = "sabariram"
