@@ -105,11 +105,11 @@ class FunctionArgPreProcessor:
         :return:
         """
         if min_val and value < min_val:
-            raise FieldValueError(ErrorCode.FIELD_MIN_RANGE_EXCEEDED, key,
+            raise FieldValueError(ErrorCode.FIELD_MIN_RANGE_VIOLATED, key,
                                   f"{key} should be greater than or equal to {min_val}",
                                   {"minValue": min_val})
         if max_val and value > max_val:
-            raise FieldValueError(ErrorCode.FIELD_MAX_RANGE_EXCEEDED, key,
+            raise FieldValueError(ErrorCode.FIELD_MAX_RANGE_VIOLATED, key,
                                   f"{key} should be lesser than or equal to {max_val}",
                                   {"maxValue": max_val})
         if value_list and value not in value_list:

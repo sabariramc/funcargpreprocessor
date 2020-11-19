@@ -109,7 +109,7 @@ class FunctionArgTestCases(unittest.TestCase):
         self.assertEqual(e.exception.field_name, 'request_id')
         self.assertEqual(e.exception.message, 'request_id is a mandatory field')
 
-    def test_type_error_1(self):
+    def test_type_error_int(self):
         with self.assertRaises(FieldTypeError) as e:
             class_instance.test(
                 {'request_id': str(uuid4()),
@@ -123,7 +123,7 @@ class FunctionArgTestCases(unittest.TestCase):
         self.assertEqual(f'pageNo should be of type {int}', e.exception.message)
         self.assertEqual({"expectedType": f'{int}'}, e.exception.error_data)
 
-    def test_type_error_2(self):
+    def test_type_error_int(self):
         with self.assertRaises(FieldTypeError) as e:
             class_instance.test(
                 {'request_id': str(uuid4()),
@@ -138,7 +138,7 @@ class FunctionArgTestCases(unittest.TestCase):
         self.assertEqual(f'id_list[1] should be of type {int}', e.exception.message)
         self.assertEqual({"expectedType": f'{int}'}, e.exception.error_data)
 
-    def test_type_error_3(self):
+    def test_type_error_datetime(self):
         with self.assertRaises(FieldTypeError) as e:
             class_instance.test(
                 {'request_id': str(uuid4()),
@@ -156,7 +156,7 @@ class FunctionArgTestCases(unittest.TestCase):
         self.assertEqual({'expectedType': '{"type": "<class \'datetime.date\'>", "format": "%Y-%m-%d"}'},
                          e.exception.error_data)
 
-    def test_type_error_4(self):
+    def test_type_error_bool(self):
         with self.assertRaises(FieldTypeError) as e:
             class_instance.test(
                 {'request_id': str(uuid4()),
@@ -172,7 +172,7 @@ class FunctionArgTestCases(unittest.TestCase):
         self.assertEqual("location_check should be of type <class 'bool'>", e.exception.message)
         self.assertEqual({'expectedType': "<class 'bool'>"}, e.exception.error_data)
 
-    def test_value_error_1(self):
+    def test_value_error_value_list(self):
         with self.assertRaises(FieldValueError) as e:
             class_instance.test(
                 {'request_id': str(uuid4()),
@@ -187,7 +187,7 @@ class FunctionArgTestCases(unittest.TestCase):
         self.assertEqual(f'id_list[1] should be one of these - [0, 1, 2, 3]', e.exception.message)
         self.assertEqual({"allowedValue": [0, 1, 2, 3]}, e.exception.error_data)
 
-    def test_value_error_2(self):
+    def test_value_error_min_value(self):
         with self.assertRaises(FieldValueError) as e:
             class_instance.test(
                 {'request_id': str(uuid4()),
@@ -196,12 +196,12 @@ class FunctionArgTestCases(unittest.TestCase):
                      "first_name": "sabari"
                      , "phone_number": "8884233317"
                  }}]})
-        self.assertEqual(ErrorCode.FIELD_MIN_RANGE_EXCEEDED, e.exception.error_code)
+        self.assertEqual(ErrorCode.FIELD_MIN_RANGE_VIOLATED, e.exception.error_code)
         self.assertEqual('pageNo', e.exception.field_name)
         self.assertEqual('pageNo should be greater than or equal to 1', e.exception.message)
         self.assertEqual({'minValue': 1}, e.exception.error_data)
 
-    def test_value_error_3(self):
+    def test_value_error_max_value(self):
         with self.assertRaises(FieldValueError) as e:
             class_instance.test(
                 {'request_id': str(uuid4()),
@@ -210,7 +210,7 @@ class FunctionArgTestCases(unittest.TestCase):
                      "first_name": "sabari"
                      , "phone_number": "8884233317"
                  }}]})
-        self.assertEqual(ErrorCode.FIELD_MAX_RANGE_EXCEEDED, e.exception.error_code)
+        self.assertEqual(ErrorCode.FIELD_MAX_RANGE_VIOLATED, e.exception.error_code)
         self.assertEqual('pageNo', e.exception.field_name)
         self.assertEqual('pageNo should be lesser than or equal to 10', e.exception.message)
         self.assertEqual({'maxValue': 10}, e.exception.error_data)
