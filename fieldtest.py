@@ -8,9 +8,10 @@ Date : 04-Jun-2020
 from datetime import date, datetime
 from copy import deepcopy
 from uuid import uuid4, UUID
+from decimal import Decimal
 
 from testimplementation import parse_function_args
-from funcargpreprocessor import DateArg, DateTimeArg, ErrorCode
+from funcargpreprocessor import DateArg, DateTimeArg, ErrorCode, DecimalArg
 from funcargpreprocessor import FieldTypeError, FieldError, MissingFieldError, FieldValueError
 
 import unittest
@@ -39,6 +40,8 @@ function_arg_definition = {
             "address_line_1": {"data_type": str, "required": True}
             , "address_line_2": {"data_type": str}
             , "pincode": {"data_type": int, "required": True}
+            , "latitude": {"data_type": DecimalArg(), "min_val": Decimal("-90"), "max_val": Decimal("90")}
+            , "longitude": {"data_type": DecimalArg(), "min_val": Decimal("-180"), "max_val": Decimal("180")}
             , "contact_person": {
                 "data_type": dict, "nested": {
                     "first_name": {"data_type": str, "required": True, "min_len": 5, "max_len": 10}
@@ -73,10 +76,14 @@ class FunctionArgTestCases(unittest.TestCase):
             "first_name": "sabari"
             , "phone_number": "8884233317"
         }}
-        location_2 = {"address_line_1": "fad", "pincode": 6544554, "contact_person": {
-            "first_name": "sabari"
-            , "phone_number": "8884233317"
-        }}
+        latitude = "-43.12412"
+        location_2 = {"address_line_1": "fad"
+            , "pincode": 6544554
+            , "latitude": latitude
+            , "contact_person": {
+                "first_name": "sabari"
+                , "phone_number": "8884233317"
+            }}
         name = {
             "first_name": "Sabari"
         }
@@ -91,6 +98,7 @@ class FunctionArgTestCases(unittest.TestCase):
              }
 
         )
+        location_2["latitude"] = Decimal(latitude)
         self.assertEqual(response.get('page_no'), 10)
         self.assertEqual(response.get('start_date'), start_date)
         self.assertEqual(response.get('request_id'), request_uuid)
