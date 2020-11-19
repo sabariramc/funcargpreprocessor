@@ -31,7 +31,9 @@ function_arg_definition = {
                   "value_list": [0, 1, 2, 3]}
     , 'reg_time': {"data_type": DateTimeArg('%Y-%m-%d %H:%M:%S')}
     , 'request_id': {'validator': validate_uuid4, 'required': True}
-    , "name": {"data_type": dict}
+    , "name": {"data_type": dict, "nested": {
+        "first_name": {"data_type": str}
+    }}
     , "location": {"data_type": list
         , "nested": {
             "address_line_1": {"data_type": str, "required": True}
@@ -39,7 +41,7 @@ function_arg_definition = {
             , "pincode": {"data_type": int, "required": True}
             , "contact_person": {
                 "data_type": dict, "nested": {
-                    "first_name": {"data_type": str, "required": True}
+                    "first_name": {"data_type": str, "required": True, "min_len": 5, "max_len": 10}
                     , "last_name": {"data_type": str}
                     , "phone_number": {"data_type": str, "required": True, "regex": r"[0-9]{10,12}"}
                 }
@@ -84,7 +86,7 @@ class FunctionArgTestCases(unittest.TestCase):
              'request_id': request_uuid,
              "id_list": [1, 1, 2, 0],
              "location": [{**deepcopy(location_1), 'fad': 'fad'}, deepcopy(location_2)]
-                , "name": name
+                , "name": deepcopy(name)
                 , "location_check": True
              }
 
@@ -212,6 +214,34 @@ class FunctionArgTestCases(unittest.TestCase):
         self.assertEqual('pageNo', e.exception.field_name)
         self.assertEqual('pageNo should be lesser than or equal to 10', e.exception.message)
         self.assertEqual({'maxValue': 10}, e.exception.error_data)
+
+    def test_length_error_1(self):
+        with self.assertRaises(FieldValueError) as e:
+            class_instance.test(
+                {'request_id': str(uuid4()),
+                 'pageNo': 1,
+                 "location": [{"address_line_1": "fad", "pincode": 6544554, "contact_person": {
+                     "first_name": "saba"
+                     , "phone_number": "8884233317"
+                 }}]})
+        self.assertEqual(ErrorCode.FIELD_MIN_LENGTH_VIOLATED, e.exception.error_code)
+        self.assertEqual('location[0].contact_person.first_name', e.exception.field_name)
+        self.assertEqual('location[0].contact_person.first_name has a minimum length of 5', e.exception.message)
+        self.assertEqual({'minLength': 5}, e.exception.error_data)
+
+    def test_length_error_2(self):
+        with self.assertRaises(FieldValueError) as e:
+            class_instance.test(
+                {'request_id': str(uuid4()),
+                 'pageNo': 1,
+                 "location": [{"address_line_1": "fad", "pincode": 6544554, "contact_person": {
+                     "first_name": "sabari fadsfasfasf"
+                     , "phone_number": "8884233317"
+                 }}]})
+        self.assertEqual(ErrorCode.FIELD_MAX_LENGTH_VIOLATED, e.exception.error_code)
+        self.assertEqual('location[0].contact_person.first_name', e.exception.field_name)
+        self.assertEqual('location[0].contact_person.first_name has a maximum length of 10', e.exception.message)
+        self.assertEqual({'maxLength': 10}, e.exception.error_data)
 
     def test_regex_error(self):
         with self.assertRaises(FieldValueError) as e:

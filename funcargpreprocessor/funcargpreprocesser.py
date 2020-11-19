@@ -88,7 +88,7 @@ class FunctionArgPreProcessor:
 
     @staticmethod
     def check_constraint(value, key, min_val=None, max_val=None, value_list=None, regex=None,
-                         regex_error_message=None):
+                         regex_error_message=None, min_len=None, max_len=None):
         """
         To check the value for constraints. The caller of this function provides only the value and key as positional
         argument and others as keyword arguments so that the function can be changed as the developer needs by extending
@@ -100,6 +100,8 @@ class FunctionArgPreProcessor:
         :param value_list: Pick list constraint
         :param regex: Regular expression constraint
         :param regex_error_message: Alternate error message for regex constraint fails
+        :param min_len: Minimum length of the field
+        :param max_len: Maximum length of the field
         :return:
         """
         if min_val and value < min_val:
@@ -113,6 +115,18 @@ class FunctionArgPreProcessor:
         if value_list and value not in value_list:
             raise FieldValueError(ErrorCode.FIELD_VALUE_NOT_IN_ALLOWED_LIST, key,
                                   f"{key} should be one of these - {value_list}", {"allowedValue": value_list})
+        if hasattr(value, '__len__'):
+            try:
+                length = len(value)
+                if min_len and length < min_len:
+                    raise FieldValueError(ErrorCode.FIELD_MIN_LENGTH_VIOLATED, key,
+                                          f"{key} has a minimum length of {min_len}", {"minLength": min_len})
+                if max_len and length > max_len:
+                    raise FieldValueError(ErrorCode.FIELD_MAX_LENGTH_VIOLATED, key,
+                                          f"{key} has a maximum length of {max_len}", {"maxLength": max_len})
+            except TypeError:
+                pass
+
         if regex and re.search(regex, value) is None:
             message = regex_error_message if regex_error_message else f"{key} should be of format - {regex}"
             raise FieldValueError(ErrorCode.FIELD_REGEX_VALIDATION_FAILED, key, message, {"regex": regex})

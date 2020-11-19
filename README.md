@@ -54,7 +54,7 @@ The following explanantion uses the example from `test` folder
     , "location": {"data_type": list
         , "nested": { # Custom definition for objects in the list
             "address_line_1": {"data_type": str, "required": True}
-            , "address_line_2": {"data_type": str}
+            , "address_line_2": {"data_type": str, "min_len": 5, "max_len": 10}
             , "pincode": {"data_type": int, "required": True}
             , "contact_person": {
                     "data_type": dict
