@@ -223,6 +223,34 @@ class FunctionArgTestCases(unittest.TestCase):
         self.assertEqual('pageNo should be lesser than or equal to 10', e.exception.message)
         self.assertEqual({'maxValue': 10}, e.exception.error_data)
 
+    def test_value_error_min_value_1(self):
+        with self.assertRaises(FieldValueError) as e:
+            class_instance.test(
+                {'request_id': str(uuid4()),
+                 'pageNo': 1,
+                 "location": [{"address_line_1": "fad", "pincode": 6544554, "latitude": "-91", "contact_person": {
+                     "first_name": "sabari"
+                     , "phone_number": "8884233317"
+                 }}]})
+        self.assertEqual(ErrorCode.FIELD_MIN_RANGE_VIOLATED, e.exception.error_code)
+        self.assertEqual('location[0].latitude', e.exception.field_name)
+        self.assertEqual('location[0].latitude should be greater than or equal to -90', e.exception.message)
+        self.assertEqual({'minValue': Decimal("-90")}, e.exception.error_data)
+
+    def test_value_error_max_value_1(self):
+        with self.assertRaises(FieldValueError) as e:
+            class_instance.test(
+                {'request_id': str(uuid4()),
+                 'pageNo': 1,
+                 "location": [{"address_line_1": "fad", "pincode": 6544554, "latitude": "91", "contact_person": {
+                     "first_name": "sabari"
+                     , "phone_number": "8884233317"
+                 }}]})
+        self.assertEqual(ErrorCode.FIELD_MAX_RANGE_VIOLATED, e.exception.error_code)
+        self.assertEqual('location[0].latitude', e.exception.field_name)
+        self.assertEqual('location[0].latitude should be lesser than or equal to 90', e.exception.message)
+        self.assertEqual({'maxValue': Decimal("90")}, e.exception.error_data)
+
     def test_length_error_1(self):
         with self.assertRaises(FieldValueError) as e:
             class_instance.test(
