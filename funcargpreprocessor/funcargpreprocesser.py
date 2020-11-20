@@ -104,30 +104,30 @@ class FunctionArgPreProcessor:
         :param max_len: Maximum length of the field
         :return:
         """
-        if min_val and value < min_val:
+        if min_val is not None and value < min_val:
             raise FieldValueError(ErrorCode.FIELD_MIN_RANGE_VIOLATED, key,
                                   f"{key} should be greater than or equal to {min_val}",
                                   {"minValue": min_val})
-        if max_val and value > max_val:
+        if max_val is not None and value > max_val:
             raise FieldValueError(ErrorCode.FIELD_MAX_RANGE_VIOLATED, key,
                                   f"{key} should be lesser than or equal to {max_val}",
                                   {"maxValue": max_val})
-        if value_list and value not in value_list:
+        if value_list is not None and value not in value_list:
             raise FieldValueError(ErrorCode.FIELD_VALUE_NOT_IN_ALLOWED_LIST, key,
                                   f"{key} should be one of these - {value_list}", {"allowedValue": value_list})
         if hasattr(value, '__len__'):
             try:
                 length = len(value)
-                if min_len and length < min_len:
+                if min_len is not None and length < min_len:
                     raise FieldValueError(ErrorCode.FIELD_MIN_LENGTH_VIOLATED, key,
                                           f"{key} has a minimum length of {min_len}", {"minLength": min_len})
-                if max_len and length > max_len:
+                if max_len is not None and length > max_len:
                     raise FieldValueError(ErrorCode.FIELD_MAX_LENGTH_VIOLATED, key,
                                           f"{key} has a maximum length of {max_len}", {"maxLength": max_len})
             except TypeError:
                 pass
 
-        if regex and re.search(regex, value) is None:
+        if regex is not None and re.search(regex, value) is None:
             message = regex_error_message if regex_error_message else f"{key} should be of format - {regex}"
             raise FieldValueError(ErrorCode.FIELD_REGEX_VALIDATION_FAILED, key, message, {"regex": regex})
 

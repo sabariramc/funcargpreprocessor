@@ -26,7 +26,7 @@ def validate_uuid4(key, value):
 
 
 function_arg_definition = {
-    "pageNo": {"data_type": int, "min_val": 1, "max_val": 10, 'alias': 'page_no', "description": "Test description"}
+    "pageNo": {"data_type": int, "min_val": 0, "max_val": 10, 'alias': 'page_no', "description": "Test description"}
     , "start_date": {"data_type": DateArg('%Y-%m-%d'), "min_val": date(2020, 1, 1)}
     , "id_list": {"data_type": list, "nested": int,
                   "value_list": [0, 1, 2, 3]}
@@ -199,15 +199,15 @@ class FunctionArgTestCases(unittest.TestCase):
         with self.assertRaises(FieldValueError) as e:
             class_instance.test(
                 {'request_id': str(uuid4()),
-                 'pageNo': 0,
+                 'pageNo': -1,
                  "location": [{"address_line_1": "fad", "pincode": 6544554, "contact_person": {
                      "first_name": "sabari"
                      , "phone_number": "8884233317"
                  }}]})
         self.assertEqual(ErrorCode.FIELD_MIN_RANGE_VIOLATED, e.exception.error_code)
         self.assertEqual('pageNo', e.exception.field_name)
-        self.assertEqual('pageNo should be greater than or equal to 1', e.exception.message)
-        self.assertEqual({'minValue': 1}, e.exception.error_data)
+        self.assertEqual('pageNo should be greater than or equal to 0', e.exception.message)
+        self.assertEqual({'minValue': 0}, e.exception.error_data)
 
     def test_value_error_max_value(self):
         with self.assertRaises(FieldValueError) as e:
