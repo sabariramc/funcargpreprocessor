@@ -33,7 +33,7 @@ The following explanantion uses the example from `test` folder
 ```python
 {
     "pageNo": { #Key name expected from the HTTP endpoint
-            "data_type": int # Data type expected, accepts 1, '1', 1.0 all of these values will be type casted to 1 before passing to the function   
+            "data_type": int # Data type expected   
             , "min_val": 0 # Min validation for the key 
             , "max_val": 20 # Max validation for the key
             , 'alias': 'page_no' # Key for the function argument, to the function the argument will be 'page_no'
@@ -47,14 +47,19 @@ The following explanantion uses the example from `test` folder
     , "id_list": {
                 "data_type": list # Expects list of value
                 , "nested": int # The values in the list should be int same rule as `date_type`
-                , "value_list": [0, 1, 2, 3] # Accepted values ex: [1,2], [1], [2,3,0]
+                , "value_list": [0, 1, 2, 3] # Accepted values, valid argument ex: [1,2], [1], [2,3,0]
                                              # Need? Multiselect options/ENUMS
     }
     , 'reg_time': {"data_type": DateTimeArg('%Y-%m-%d %H:%M:%S')}
     , "location": {"data_type": list
         , "nested": { # Custom definition for objects in the list
             "address_line_1": {"data_type": str, "required": True}
-            , "address_line_2": {"data_type": str, "min_len": 5, "max_len": 10}
+            , "address_line_2": {"data_type": str
+                                    , "min_len": 5 #Mininum length expected for the argument
+                                    , "max_len": 10 # Maximum length accepted for the argument
+                                }
+            , "latitude": {"data_type": DecimalArg(), "min_val": Decimal("-90"), "max_val": Decimal("90")}
+            , "longitude": {"data_type": DecimalArg(), "min_val": Decimal("-180"), "max_val": Decimal("180")}
             , "pincode": {"data_type": int, "required": True}
             , "contact_person": {
                     "data_type": dict
