@@ -5,7 +5,7 @@ Author : sabariram
 Date : 04-Jun-2020
 """
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from copy import deepcopy
 from uuid import uuid4, UUID
 from decimal import Decimal
@@ -33,10 +33,17 @@ def get_current_date():
     return date.today()
 
 
+def get_future_date(date_factor=1):
+    def inner_fu():
+        return date.today() + timedelta(days=date_factor)
+
+    return inner_fu
+
+
 function_arg_definition = {
     "pageNo": {"data_type": int, "min_val": 0, "max_val": 10, 'alias': 'page_no', "description": "Test description",
                "default": 1}
-    , "start_date": {"data_type": DateArg('%Y-%m-%d'), "min_val": get_current_date}
+    , "start_date": {"data_type": DateArg('%Y-%m-%d'), "min_val": get_current_date, "max_val": get_future_date(10)}
     , "id_list": {"data_type": list, "nested": int,
                   "value_list": [0, 1, 2, 3]}
     , 'reg_time': {"data_type": DateTimeArg('%Y-%m-%d %H:%M:%S'), "default": get_current_time}
@@ -302,6 +309,22 @@ class FunctionArgTestCases(unittest.TestCase):
         self.assertEqual('location[0].latitude', e.exception.field_name)
         self.assertEqual('location[0].latitude should be lesser than or equal to 90', e.exception.message)
         self.assertEqual({'maxValue': Decimal("90")}, e.exception.error_data)
+
+    def test_value_error_max_value_2(self):
+        start_date = (date.today() + timedelta(days=11)).strftime('%Y-%m-%d')
+        with self.assertRaises(FieldValueError) as e:
+            class_instance.test(
+                {'request_id': str(uuid4()),
+                 "start_date": start_date,
+                 "location": [{"address_line_1": "fad", "pincode": 6544554, "contact_person": {
+                     "first_name": "sabari"
+                     , "phone_number": "8884233317"
+                 }}]})
+        self.assertEqual(ErrorCode.FIELD_MAX_RANGE_VIOLATED, e.exception.error_code)
+        self.assertEqual('start_date', e.exception.field_name)
+        self.assertEqual(f'start_date should be lesser than or equal to {date.today() + timedelta(days=10)}',
+                         e.exception.message)
+        self.assertEqual({'maxValue': date.today() + timedelta(days=10)}, e.exception.error_data)
 
     def test_length_error_1(self):
         with self.assertRaises(FieldValueError) as e:

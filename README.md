@@ -31,17 +31,32 @@ or download the code and run
 The following explanantion uses the example from `test` folder
 
 ```python
-{
+
+def get_current_time():
+    return datetime.now().replace(microsecond=0)
+
+def get_current_date():
+    return date.today()
+
+def get_future_date(date_factor=1):
+    def inner_fu():
+        return date.today() + timedelta(date_factor)
+
+    return inner_fu
+
+definition = {
     "pageNo": { #Key name expected from the HTTP endpoint
             "data_type": int # Data type expected   
             , "min_val": 0 # Min validation for the key 
             , "max_val": 20 # Max validation for the key
             , 'alias': 'page_no' # Key for the function argument, to the function the argument will be 'page_no'
                                  # Need? most of the time the http request are expected json and the keys will be in camelCase
+            , "default": 1 # Default value for the field if no value has been passed
     }
     , "start_date": {
                 "data_type": DateArg('%Y-%m-%d') # Expects a date argument in <str>'YYYY-MM-DD' format or datetime.date object accepts '2020-01-10', datetime.date(2020, 1, 10)  converts,in case of a string argument, to datetime.date(2020, 1, 10) and passes it to the function
-                , "min_val": date(2020, 1, 1)
+                , "min_val": get_current_date # Function can be passed for min value, this function should not take any argument and should return a single value of the same type
+                , "max_val": get_future_date(10) # Function can be passed for max value, this function should not take any argument and should return a single value of the same type
                 , "required": True # This key is required to be there in the input
     }
     , "id_list": {
@@ -50,7 +65,9 @@ The following explanantion uses the example from `test` folder
                 , "value_list": [0, 1, 2, 3] # Accepted values, valid argument ex: [1,2], [1], [2,3,0]
                                              # Need? Multiselect options/ENUMS
     }
-    , 'reg_time': {"data_type": DateTimeArg('%Y-%m-%d %H:%M:%S')}
+    , 'reg_time': {"data_type": DateTimeArg('%Y-%m-%d %H:%M:%S'), 
+                    "default": get_current_time # Function can be passed for default value, this function should not take any argument and should return a single value of the same type
+    }
     , "location": {"data_type": list
         , "nested": { # Custom definition for objects in the list
             "address_line_1": {"data_type": str, "required": True}
