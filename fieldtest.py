@@ -25,12 +25,21 @@ def validate_uuid4(key, value):
     return str(value)
 
 
+def get_current_time():
+    return datetime.now().replace(microsecond=0)
+
+
+def get_current_date():
+    return date.today()
+
+
 function_arg_definition = {
-    "pageNo": {"data_type": int, "min_val": 0, "max_val": 10, 'alias': 'page_no', "description": "Test description"}
-    , "start_date": {"data_type": DateArg('%Y-%m-%d'), "min_val": date(2020, 1, 1)}
+    "pageNo": {"data_type": int, "min_val": 0, "max_val": 10, 'alias': 'page_no', "description": "Test description",
+               "default": 1}
+    , "start_date": {"data_type": DateArg('%Y-%m-%d'), "min_val": get_current_date}
     , "id_list": {"data_type": list, "nested": int,
                   "value_list": [0, 1, 2, 3]}
-    , 'reg_time': {"data_type": DateTimeArg('%Y-%m-%d %H:%M:%S')}
+    , 'reg_time': {"data_type": DateTimeArg('%Y-%m-%d %H:%M:%S'), "default": get_current_time}
     , 'request_id': {'validator': validate_uuid4, 'required': True}
     , "name": {"data_type": dict, "nested": {
         "first_name": {"data_type": str}
@@ -67,7 +76,7 @@ class_instance = Test()
 
 
 class FunctionArgTestCases(unittest.TestCase):
-    def test_positive(self):
+    def test_positive_1(self):
         start_date = date.today()
         reg_time = datetime.now()
         reg_time = reg_time.replace(microsecond=0)
@@ -100,6 +109,49 @@ class FunctionArgTestCases(unittest.TestCase):
         )
         location_2["latitude"] = Decimal(latitude)
         self.assertEqual(response.get('page_no'), 10)
+        self.assertEqual(response.get('start_date'), start_date)
+        self.assertEqual(response.get('request_id'), request_uuid)
+        self.assertEqual(response.get('reg_time'), reg_time)
+        self.assertEqual(response.get('id_list'), [1, 1, 2, 0])
+        self.assertEqual(response.get('location')[0], location_1)
+        self.assertEqual(response.get('location')[1], location_2)
+        self.assertEqual(response.get('location')[1], location_2)
+        self.assertEqual(response.get('name'), name)
+        self.assertEqual(response.get('location_check'), True)
+
+    def test_positive_2(self):
+        start_date = date.today()
+        reg_time = datetime.now()
+        reg_time = reg_time.replace(microsecond=0)
+        request_uuid = str(uuid4())
+        location_1 = {"address_line_1": "fad", "pincode": 123124, "contact_person": {
+            "first_name": "sabari"
+            , "phone_number": "8884233317"
+        }}
+        latitude = "-43.12412"
+        location_2 = {"address_line_1": "fad"
+            , "pincode": 6544554
+            , "latitude": latitude
+            , "contact_person": {
+                "first_name": "sabari"
+                , "phone_number": "8884233317"
+            }}
+        name = {
+            "first_name": "Sabari"
+        }
+        response = class_instance.test(
+            {
+                "start_date": start_date.strftime('%Y-%m-%d'),
+                'request_id': request_uuid,
+                "id_list": [1, 1, 2, 0],
+                "location": [{**deepcopy(location_1), 'fad': 'fad'}, deepcopy(location_2)]
+                , "name": deepcopy(name)
+                , "location_check": True
+            }
+
+        )
+        location_2["latitude"] = Decimal(latitude)
+        self.assertEqual(response.get('page_no'), 1)
         self.assertEqual(response.get('start_date'), start_date)
         self.assertEqual(response.get('request_id'), request_uuid)
         self.assertEqual(response.get('reg_time'), reg_time)

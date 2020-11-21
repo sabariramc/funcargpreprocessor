@@ -8,6 +8,7 @@ Date : 08-Jun-2020
 from functools import wraps
 import re
 from copy import deepcopy
+from types import MethodType, FunctionType
 
 from .exceptions import FieldError, MissingFieldError, FieldTypeError, FieldValueError
 from .customtypearg import BaseArg
@@ -43,6 +44,7 @@ class FunctionArgPreProcessor:
             data_type = type_definition.pop('data_type', None)
             validator = type_definition.pop('validator', None)
             nested = type_definition.pop('nested', None)
+            default_value = type_definition.pop('default', None)
             type_definition.pop('description', None)
             print_key = f"{parent}.{key}" if parent else key
             if self.is_non_empty_value(value):
@@ -50,6 +52,8 @@ class FunctionArgPreProcessor:
                     parsed_args[alias_key] = validator(print_key, value)
                 else:
                     parsed_args[alias_key] = self.parse_value(print_key, value, data_type, nested, **type_definition)
+            elif default_value is not None:
+                parsed_args[alias_key] = self.get_value(default_value)
             elif required:
                 raise MissingFieldError(print_key)
         if self.is_strict and self.is_non_empty_value(params):
@@ -86,8 +90,8 @@ class FunctionArgPreProcessor:
             self.check_constraint(value, key, **value_constraints)
         return value
 
-    @staticmethod
-    def check_constraint(value, key, min_val=None, max_val=None, value_list=None, regex=None,
+    @classmethod
+    def check_constraint(cls, value, key, min_val=None, max_val=None, value_list=None, regex=None,
                          regex_error_message=None, min_len=None, max_len=None):
         """
         To check the value for constraints. The caller of this function provides only the value and key as positional
@@ -104,6 +108,8 @@ class FunctionArgPreProcessor:
         :param max_len: Maximum length of the field
         :return:
         """
+        min_val = cls.get_value(min_val)
+        max_val = cls.get_value(max_val)
         if min_val is not None and value < min_val:
             raise FieldValueError(ErrorCode.FIELD_MIN_RANGE_VIOLATED, key,
                                   f"{key} should be greater than or equal to {min_val}",
@@ -172,3 +178,9 @@ class FunctionArgPreProcessor:
         if (isinstance(value, list) or isinstance(value, dict)) and not value:
             return False
         return True
+
+    @staticmethod
+    def get_value(value):
+        if isinstance(value, FunctionType) or isinstance(value, MethodType):
+            return value()
+        return value
