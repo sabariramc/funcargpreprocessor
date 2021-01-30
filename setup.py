@@ -13,7 +13,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(name='funcargpreprocessor',
-      version='0.9.3',
+      version='0.10.0',
       python_requires='>=3.6',
       description='Parser for function arguments',
       url='https://github.com/sabariramc/funcargpreprocessor',
@@ -29,6 +29,7 @@ setup(name='funcargpreprocessor',
           'Operating System :: OS Independent',
           'Programming Language :: Python :: 3.6',
           'Programming Language :: Python :: 3.7',
+          'Programming Language :: Python :: 3.8',
           'Topic :: Software Development :: Libraries :: Python Modules'
           , "License :: OSI Approved :: MIT License"
       ])

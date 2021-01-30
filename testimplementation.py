@@ -19,3 +19,10 @@ def parse_function_args(query_param_definition, is_strict=False):
         return FuncArgParser(query_param_definition, is_strict=is_strict)(fu)
 
     return inner_get_fu
+
+
+def parse_function_args_with_auto_type_cast(query_param_definition, is_strict=False):
+    def inner_get_fu(fu):
+        return FuncArgParser(query_param_definition, is_strict=is_strict, auto_type_cast=True)(fu)
+
+    return inner_get_fu
