@@ -16,9 +16,10 @@ from .errorcode import ErrorCode
 
 
 class FunctionArgPreProcessor:
-    def __init__(self, definition, is_strict=True):
+    def __init__(self, definition, is_strict=True, auto_type_cast=False):
         self.is_strict = is_strict
         self.definition = self.validate_type_definition(definition)
+        self.auto_type_cast = auto_type_cast
 
     def __call__(self, func_obj):
         @wraps(func_obj)
@@ -90,6 +91,29 @@ class FunctionArgPreProcessor:
             self.check_constraint(value, key, **value_constraints)
         return value
 
+    def type_cast(self, value, data_type):
+        """
+        To check if the value is of expected data type if not type cast it to the required datatype. Supports type cast
+        for BaseParams as well
+        :param value: Value from the request
+        :param data_type: Expected data type of the param
+        :return: type casted value
+        """
+        if isinstance(data_type, BaseArg):
+            value = data_type(value)
+        elif isinstance(value, data_type) is False:
+            if self.auto_type_cast and isinstance(value, str) and data_type in (int, bool, float):
+                if data_type is bool:
+                    value = value.lower()
+                    if value not in {"true", "false"}:
+                        raise Exception()
+                    value = True if value == "true" else False
+                else:
+                    value = data_type(value)
+            else:
+                raise Exception()
+        return value
+
     @classmethod
     def check_constraint(cls, value, key, min_val=None, max_val=None, value_list=None, regex=None,
                          regex_error_message=None, min_len=None, max_len=None):
@@ -148,21 +172,6 @@ class FunctionArgPreProcessor:
         data_type = type_definition.get('data_type')
         validator = type_definition.get('validator')
         return type_definition
-
-    @staticmethod
-    def type_cast(value, data_type):
-        """
-        To check if the value is of expected data type if not type cast it to the required datatype. Supports type cast
-        for BaseParams as well
-        :param value: Value from the request
-        :param data_type: Expected data type of the param
-        :return: type casted value
-        """
-        if isinstance(data_type, BaseArg):
-            value = data_type(value)
-        elif isinstance(value, data_type) is False:
-            raise Exception()
-        return value
 
     @staticmethod
     def is_non_empty_value(value):
