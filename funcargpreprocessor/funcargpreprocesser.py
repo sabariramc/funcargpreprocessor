@@ -16,10 +16,11 @@ from .errorcode import ErrorCode
 
 
 class FunctionArgPreProcessor:
-    def __init__(self, definition, is_strict=True, auto_type_cast=False):
+    def __init__(self, definition, is_strict=True, auto_type_cast=False, filter_empty=True):
         self.is_strict = is_strict
         self.definition = self.validate_type_definition(definition)
         self.auto_type_cast = auto_type_cast
+        self.filter_empty = filter_empty
 
     def __call__(self, func_obj):
         @wraps(func_obj)
@@ -57,6 +58,8 @@ class FunctionArgPreProcessor:
                 parsed_args[alias_key] = self.get_value(default_value)
             elif required:
                 raise MissingFieldError(print_key)
+            elif self.filter_empty is False:
+                raise FieldValueError(ErrorCode.FIELD_VALUE_EMPTY, print_key, "Empty value")
         if self.is_strict and self.is_non_empty_value(params):
             param_list = list(params.keys())
             raise FieldError(ErrorCode.UN_RECOGNIZED_FIELD, param_list, f'Unexpected params {param_list}')
