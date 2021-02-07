@@ -4,7 +4,7 @@ Project :
 Author : sabariram
 Date : 08-Jun-2020
 """
-
+from enum import Enum
 from functools import wraps
 import re
 from copy import deepcopy
@@ -85,13 +85,13 @@ class FunctionArgPreProcessor:
                     field_name = f'{key}[{i}]'
                     try:
                         item = self.type_cast(item, nested)
-                        temp.append(item)
                     except Exception:
                         raise FieldTypeError(field_name, nested)
-                    self.check_constraint(item, field_name, **value_constraints)
+
+                    temp.append(self.check_constraint(item, field_name, **value_constraints))
                 value = temp
         else:
-            self.check_constraint(value, key, **value_constraints)
+            value = self.check_constraint(value, key, **value_constraints)
         return value
 
     def type_cast(self, value, data_type):
@@ -128,7 +128,7 @@ class FunctionArgPreProcessor:
         :param key: Key name for passing back in error if any constraint fails
         :param min_val: Min range constraint
         :param max_val: Max range constraint
-        :param value_list: Pick list constraint
+        :param value_list: Pick list constraint or a enum class
         :param regex: Regular expression constraint
         :param regex_error_message: Alternate error message for regex constraint fails
         :param min_len: Minimum length of the field
@@ -145,9 +145,20 @@ class FunctionArgPreProcessor:
             raise FieldValueError(ErrorCode.FIELD_MAX_RANGE_VIOLATED, key,
                                   f"{key} should be lesser than or equal to {max_val}",
                                   {"maxValue": max_val})
-        if value_list is not None and value not in value_list:
-            raise FieldValueError(ErrorCode.FIELD_VALUE_NOT_IN_ALLOWED_LIST, key,
-                                  f"{key} should be one of these - {value_list}", {"allowedValue": value_list})
+        if value_list is not None:
+            if isinstance(value_list, list):
+                if value not in value_list:
+                    raise FieldValueError(ErrorCode.FIELD_VALUE_NOT_IN_ALLOWED_LIST, key,
+                                          f"{key} should be one of these - {value_list}", {"allowedValue": value_list})
+            elif issubclass(value_list, Enum):
+                    try:
+                        value = value_list(value)
+                    except Exception:
+                        value_list = [x.value for x in value_list]
+                        raise FieldValueError(ErrorCode.FIELD_VALUE_NOT_IN_ALLOWED_LIST, key,
+                                              f"{key} should be one of these - {value_list}",
+                                              {"allowedValue": value_list})
+
         if hasattr(value, '__len__'):
             try:
                 length = len(value)
@@ -163,6 +174,7 @@ class FunctionArgPreProcessor:
         if regex is not None and re.search(regex, value) is None:
             message = regex_error_message if regex_error_message else f"{key} should be of format - {regex}"
             raise FieldValueError(ErrorCode.FIELD_REGEX_VALIDATION_FAILED, key, message, {"regex": regex})
+        return value
 
     @staticmethod
     def validate_type_definition(type_definition):

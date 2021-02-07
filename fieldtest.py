@@ -40,6 +40,15 @@ def get_future_date(date_factor=1):
     return inner_fu
 
 
+from enum import Enum
+
+
+class Gender(Enum):
+    MALE = "male"
+    FEMALE = "female"
+    TRANSGENDER = "transgender"
+
+
 function_arg_definition = {
     "pageNo": {"data_type": int, "min_val": 0, "max_val": 10, 'alias': 'page_no', "description": "Test description",
                "default": 1}
@@ -51,6 +60,7 @@ function_arg_definition = {
     , "name": {"data_type": dict, "nested": {
         "first_name": {"data_type": str}, "last_name": {"data_type": str}
     }}
+    , "gender": {"data_type": str, "value_list": Gender}
     , "location": {"data_type": list
         , "nested": {
             "address_line_1": {"data_type": str, "required": True}
@@ -112,15 +122,18 @@ class FunctionArgTestCases(unittest.TestCase):
         name = {
             "first_name": "Sabari"
         }
+        gender = "male"
         response = not_auto_cast_class_instance.test(
-            {"pageNo": 10, "start_date": start_date.strftime('%Y-%m-%d')
-                , "reg_time": reg_time.strftime('%Y-%m-%d %H:%M:%S'),
-             'request_id': request_uuid,
-             "id_list": [1, 1, 2, 0],
-             "location": [{**deepcopy(location_1), 'fad': 'fad'}, deepcopy(location_2)]
+            {
+                "pageNo": 10, "start_date": start_date.strftime('%Y-%m-%d')
+                , "reg_time": reg_time.strftime('%Y-%m-%d %H:%M:%S')
+                , 'request_id': request_uuid
+                , "id_list": [1, 1, 2, 0]
+                , "location": [{**deepcopy(location_1), 'fad': 'fad'}, deepcopy(location_2)]
                 , "name": deepcopy(name)
                 , "location_check": True
-             }
+                , "gender": gender
+            }
 
         )
         location_2["latitude"] = Decimal(latitude)
@@ -133,6 +146,7 @@ class FunctionArgTestCases(unittest.TestCase):
         self.assertEqual(response.get('location')[1], location_2)
         self.assertEqual(response.get('location')[1], location_2)
         self.assertEqual(response.get('name'), name)
+        self.assertEqual(response.get('gender'), Gender(gender))
         self.assertEqual(response.get('location_check'), True)
 
     def test_positive_2(self):
@@ -439,15 +453,17 @@ class FunctionArgAutoTypeCastTestCases(unittest.TestCase):
         name = {
             "first_name": "Sabari"
         }
-        response = auto_cast_class_instance.test(
-            {"pageNo": 10, "start_date": start_date.strftime('%Y-%m-%d')
-                , "reg_time": reg_time.strftime('%Y-%m-%d %H:%M:%S'),
-             'request_id': request_uuid,
-             "id_list": [1, 1, 2, 0],
-             "location": [{**deepcopy(location_1), 'fad': 'fad'}, deepcopy(location_2)]
-                , "name": deepcopy(name)
-                , "location_check": "true"
-             }
+        gender = "female"
+        response = auto_cast_class_instance.test({
+            "pageNo": 10, "start_date": start_date.strftime('%Y-%m-%d')
+            , "reg_time": reg_time.strftime('%Y-%m-%d %H:%M:%S')
+            , 'request_id': request_uuid
+            , "id_list": [1, 1, 2, 0]
+            , "location": [{**deepcopy(location_1), 'fad': 'fad'}, deepcopy(location_2)]
+            , "name": deepcopy(name)
+            , "location_check": True
+            , "gender": gender
+        }
 
         )
         location_2["latitude"] = Decimal(latitude)
@@ -460,7 +476,7 @@ class FunctionArgAutoTypeCastTestCases(unittest.TestCase):
         self.assertEqual(response.get('location')[1], location_2)
         self.assertEqual(response.get('location')[1], location_2)
         self.assertEqual(response.get('name'), name)
-        self.assertEqual(response.get('location_check'), True)
+        self.assertEqual(response.get('gender'), Gender(gender))
 
     def test_positive_2(self):
         start_date = date.today()
@@ -759,6 +775,20 @@ class FunctionArgAutoTypeCastTestCases(unittest.TestCase):
         self.assertEqual(ErrorCode.ERRONEOUS_FIELD_TYPE, e.exception.error_code)
         self.assertEqual("name", e.exception.field_name)
         self.assertEqual("name should be of type <class 'dict'>", e.exception.message)
+
+    def test_enum_error(self):
+        with self.assertRaises(FieldValueError) as e:
+            auto_cast_class_instance.test({
+                "request_id": str(uuid4())
+                , "location": [{"address_line_1": "fad", "pincode": 6544554, "contact_person": {
+                    "first_name": "sabari"
+                    , "phone_number": "8884233317"
+                }}]
+                , "gender": "fasdf"
+            })
+        self.assertEqual(ErrorCode.FIELD_VALUE_NOT_IN_ALLOWED_LIST, e.exception.error_code)
+        self.assertEqual("gender", e.exception.field_name)
+        self.assertEqual("gender should be one of these - ['male', 'female', 'transgender']", e.exception.message)
 
 
 if __name__ == '__main__':
