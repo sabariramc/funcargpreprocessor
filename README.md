@@ -44,6 +44,15 @@ def get_future_date(date_factor=1):
 
     return inner_fu
 
+
+from enum import Enum
+
+
+class Gender(Enum):
+    MALE = "male"
+    FEMALE = "female"
+    TRANSGENDER = "transgender"
+
 definition = {
     "pageNo": { #Key name expected from the HTTP endpoint
             "data_type": int # Data type expected   
@@ -63,8 +72,10 @@ definition = {
                 "data_type": list # Expects list of value
                 , "nested": int # The values in the list should be int same rule as `date_type`
                 , "value_list": [0, 1, 2, 3] # Accepted values, valid argument ex: [1,2], [1], [2,3,0]
-                                             # Need? Multiselect options/ENUMS
+                                             # Need? Multiselect options
     }
+    , "gender": {"data_type": str, "value_list": Gender} #Enum can be used for the value list and will be marshalled
+    , "random_flag": {"data_type": int, "value_list": [0,1]} 
     , 'reg_time': {"data_type": DateTimeArg('%Y-%m-%d %H:%M:%S'), 
                     "default": get_current_time # Function can be passed for default value, this function should not take any argument and should return a single value of the same type
     }
