@@ -205,6 +205,6 @@ class FunctionArgPreProcessor:
 
     @staticmethod
     def get_value(value):
-        if isinstance(value, FunctionType) or isinstance(value, MethodType):
+        if callable(value):
             return value()
         return value

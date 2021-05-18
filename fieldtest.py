@@ -52,7 +52,7 @@ class Gender(Enum):
 function_arg_definition = {
     "pageNo": {"data_type": int, "min_val": 0, "max_val": 10, 'alias': 'page_no', "description": "Test description",
                "default": 1}
-    , "start_date": {"data_type": DateArg('%Y-%m-%d'), "min_val": get_current_date, "max_val": get_future_date(10)}
+    , "start_date": {"data_type": DateArg('%Y-%m-%d'), "min_val": date.today, "max_val": get_future_date(10)}
     , "id_list": {"data_type": list, "nested": int,
                   "value_list": [0, 1, 2, 3]}
     , 'reg_time': {"data_type": DateTimeArg('%Y-%m-%d %H:%M:%S'), "default": get_current_time}
